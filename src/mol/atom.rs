@@ -1,5 +1,6 @@
 use super::{Element, Point3d};
 
+#[derive(Debug)]
 pub struct Atom {
     pub element: Element,
     pub position: Point3d,

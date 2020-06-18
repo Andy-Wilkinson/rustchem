@@ -1,3 +1,4 @@
+#[derive(Debug)]
 pub struct Element(u32);
 
 impl Element {

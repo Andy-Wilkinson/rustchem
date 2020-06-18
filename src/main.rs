@@ -1,14 +1,14 @@
 use std::fs::File;
-use rustchem::io::format_pdb::read_pdb;
+use rustchem::io::read_mol;
 
 fn main()
 {
-    let file = File::open("../rustDock/test_files/1OYT-receptor.pdb");
+    let file = File::open("./test_files/alanine.mol");
 
     match file {
         Ok(file) => {
-            match read_pdb(file) {
-                Ok(mol) => println!("Success: {} atoms read", mol.atoms.len()),
+            match read_mol(file) {
+                Ok(mol) => println!("{:#?}", mol),
                 Err(_err) => panic!("Error parsing file"),
             }
         },

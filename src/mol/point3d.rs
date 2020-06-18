@@ -1,3 +1,4 @@
+#[derive(Debug)]
 pub struct Point3d {
     pub x: f64,
     pub y: f64,
