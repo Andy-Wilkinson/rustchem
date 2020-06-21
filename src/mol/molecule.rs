@@ -1,9 +1,15 @@
-use super::{Atom, Bond};
+use super::{Atom, Bond, PropertyMap};
 
 #[derive(Debug)]
 pub struct Molecule {
     pub atoms: Vec<Atom>,
     pub bonds: Vec<Bond>,
+    pub properties: PropertyMap<MoleculeProperty>,
+}
+
+#[derive(PartialEq, Eq, Hash, Debug)]
+pub enum MoleculeProperty {
+    Name,
 }
 
 impl Molecule {
@@ -11,6 +17,7 @@ impl Molecule {
         Molecule {
             atoms: Vec::new(),
             bonds: Vec::new(),
+            properties: PropertyMap::new(),
         }
     }
 
@@ -18,6 +25,7 @@ impl Molecule {
         Molecule {
             atoms,
             bonds,
+            properties: PropertyMap::new(),
         }
     }
 }

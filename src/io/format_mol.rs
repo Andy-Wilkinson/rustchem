@@ -123,10 +123,8 @@ pub fn parse_bond_line(line: &str) -> Result<Bond, ParseError> {
     let _bond_stereo = parse_u32_default(&line[15..18], "bond topology")?;
     let _reacting_center = parse_u32_default(&line[18..21], "reacting center status")?;
 
-    Ok(Bond {
-        from_atom_id: from_atom_id - 1,
-        to_atom_id: to_atom_id - 1,
-    })
+    
+    Ok(Bond::new(from_atom_id - 1, to_atom_id - 1))
 }
 
 pub fn reset_atom_charges(atoms: &mut Vec<Atom>) {

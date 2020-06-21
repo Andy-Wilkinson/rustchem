@@ -1,10 +1,16 @@
-use super::{Element, Point3d};
+use super::{Element, Point3d, PropertyMap};
 
 #[derive(Debug)]
 pub struct Atom {
     pub element: Element,
     pub position: Point3d,
     pub formal_charge: i32,
+    pub properties: PropertyMap<AtomProperty>,
+}
+
+#[derive(PartialEq, Eq, Hash, Debug)]
+pub enum AtomProperty {
+    PartialCharge,
 }
 
 pub type AtomIndex = usize;
@@ -15,6 +21,7 @@ impl Atom {
             element,
             position: Point3d::new(0.0, 0.0, 0.0),
             formal_charge: 0,
+            properties: PropertyMap::new(),
         }
     }
 

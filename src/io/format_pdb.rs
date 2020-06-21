@@ -1,5 +1,5 @@
 use std::io::{BufReader, BufRead};
-use crate::mol::{Atom, Element, Molecule, Point3d};
+use crate::mol::{Atom, Molecule, Point3d};
 use super::{FileReadError, ParseError};
 use super::utils::{parse_u32, parse_i32, parse_f64};
 
@@ -51,11 +51,10 @@ fn parse_pdb_atom(line: &str) -> Result<Atom, ParseError> {
         _ => return Err(ParseError::Parse {name: "charge".to_string(), value: charge.to_string()})
     };
 
-    Ok(Atom {
-        element: Element::from_symbol(element),
-        position: Point3d::new(x, y, z),
-        formal_charge: charge,
-    })
+    let mut atom = Atom::from_symbol(element);
+    atom.position = Point3d::new(x, y, z);
+    atom.formal_charge = charge;
+    Ok(atom)
 }
 
 
