@@ -7,6 +7,8 @@ pub struct Atom {
     pub formal_charge: i32,
 }
 
+pub type AtomIndex = usize;
+
 impl Atom {
     pub fn new(element: Element) -> Atom {
         Atom {

@@ -1,6 +1,6 @@
 use crate::mol::{Atom, Bond, Element, Molecule, Point3d};
 use super::{FileReadError, ParseError, LineReader};
-use super::utils::{parse_u32, parse_f64};
+use super::utils::{parse_u32, parse_usize, parse_f64};
 
 // Reference: https://web.archive.org/web/20070630061308/http:/www.mdl.com/downloads/public/ctfile/ctfile.pdf
 
@@ -64,6 +64,10 @@ fn parse_u32_default(val: &str, dest_nature: &str) -> Result<u32, ParseError> {
     if val.trim().len() == 0 { Ok(0) } else { parse_u32(val, dest_nature) }
 }
 
+fn parse_usize_default(val: &str, dest_nature: &str) -> Result<usize, ParseError> {
+    if val.trim().len() == 0 { Ok(0) } else { parse_usize(val, dest_nature) }
+}
+
 fn parse_counts(line: &str) -> Result<CountsLine, ParseError> {
     let counts_line = CountsLine {
         num_atoms: parse_u32_default(&line[0..3], "atom count")?,
@@ -112,8 +116,8 @@ pub fn parse_atom_line(line: &str) -> Result<Atom, ParseError> {
 pub fn parse_bond_line(line: &str) -> Result<Bond, ParseError> {
     let line = if line.len() >= 21 { line.to_string() } else { format!("{:21}", line) };
 
-    let from_atom_id = parse_u32_default(&line[0..3], "atom 1")?;
-    let to_atom_id = parse_u32_default(&line[3..6], "atom 2")?;
+    let from_atom_id = parse_usize_default(&line[0..3], "atom 1")?;
+    let to_atom_id = parse_usize_default(&line[3..6], "atom 2")?;
     let _bond_type = parse_u32_default(&line[6..9], "bond type")?;
     let _bond_stereo = parse_u32_default(&line[9..12], "bond stereochemistry")?;
     let _bond_stereo = parse_u32_default(&line[15..18], "bond topology")?;

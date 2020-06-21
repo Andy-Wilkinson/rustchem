@@ -12,6 +12,12 @@ pub fn parse_i32(val: &str, dest_nature: &str) -> Result<i32, ParseError> {
        .map_err(|source| ParseError::ParseInt { source, name: dest_nature.to_string(), value: val.to_string() })
 }
 
+pub fn parse_usize(val: &str, dest_nature: &str) -> Result<usize, ParseError> {
+    val.trim()
+       .parse::<usize>()
+       .map_err(|source| ParseError::ParseInt { source, name: dest_nature.to_string(), value: val.to_string() })
+}
+
 pub fn parse_f64(val: &str, dest_nature: &str) -> Result<f64, ParseError> {
     val.trim()
        .parse::<f64>()
