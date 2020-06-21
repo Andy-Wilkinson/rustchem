@@ -103,11 +103,10 @@ pub fn parse_atom_line(line: &str) -> Result<Atom, ParseError> {
         _ => 0
     };
     
-    Ok(Atom {
-        element: Element::from_symbol(symbol),
-        formal_charge,
-        position: Point3d::new(x, y, z)
-    })
+    let mut atom = Atom::new(Element::from_symbol(symbol));
+    atom.formal_charge = formal_charge;
+    atom.position = Point3d::new(x, y, z);
+    Ok(atom)
 }
 
 pub fn parse_bond_line(line: &str) -> Result<Bond, ParseError> {
