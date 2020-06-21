@@ -24,9 +24,8 @@ pub fn read_pdb(reader: impl std::io::Read) -> Result<Molecule, FileReadError> {
         };
     }
 
-    Ok(Molecule {
-        atoms
-    })
+    let molecule = Molecule::from_graph(atoms, Vec::new());
+    Ok(molecule)
 }
 
 fn parse_pdb_atom(line: &str) -> Result<Atom, ParseError> {
