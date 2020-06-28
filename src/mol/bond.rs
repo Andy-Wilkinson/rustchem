@@ -20,3 +20,19 @@ impl Bond {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use super::super::MoleculeError;
+
+    #[test]
+    fn new() -> Result<(), MoleculeError> {
+        let bond = Bond::new(1, 2);
+        
+        assert_eq!(bond.from_atom_id, 1);
+        assert_eq!(bond.to_atom_id, 2);
+
+        Ok(())
+    }
+}
