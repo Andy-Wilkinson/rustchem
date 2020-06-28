@@ -51,7 +51,7 @@ fn parse_pdb_atom(line: &str) -> Result<Atom, ParseError> {
         _ => return Err(ParseError::Parse {name: "charge".to_string(), value: charge.to_string()})
     };
 
-    let mut atom = Atom::from_symbol(element);
+    let mut atom = Atom::from_symbol(element)?;
     atom.position = Point3d::new(x, y, z);
     atom.formal_charge = charge;
     Ok(atom)
@@ -66,7 +66,7 @@ mod tests {
     fn parse_atom_atomic_element() -> Result<(), ParseError> {
         let line = "ATOM      4  CA  ALA L   1B     13.000  21.098  20.348  1.00 20.50      A    C  ";
         let atom = parse_pdb_atom(&line)?;
-        assert_eq!(atom.element.get_atomic_number(), 12);
+        assert_eq!(atom.element.atomic_number, 12);
         Ok(())
     }
 

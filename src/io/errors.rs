@@ -25,4 +25,7 @@ pub enum ParseError {
 
     #[error("{message}")]
     UnexpectedTag { message: String },
+
+    #[error(transparent)]
+    MoleculeError(#[from] crate::mol::MoleculeError),
 }

@@ -1,4 +1,4 @@
-use crate::mol::{Atom, Bond, Element, Molecule, Point3d};
+use crate::mol::{Atom, Bond, Molecule, Point3d};
 use super::{FileReadError, ParseError, LineReader};
 use super::utils::{parse_u32, parse_usize, parse_f64};
 
@@ -107,7 +107,7 @@ pub fn parse_atom_line(line: &str) -> Result<Atom, ParseError> {
         _ => 0
     };
     
-    let mut atom = Atom::new(Element::from_symbol(symbol));
+    let mut atom = Atom::from_symbol(symbol)?;
     atom.formal_charge = formal_charge;
     atom.position = Point3d::new(x, y, z);
     Ok(atom)
