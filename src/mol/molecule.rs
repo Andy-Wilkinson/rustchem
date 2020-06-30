@@ -29,3 +29,9 @@ impl Molecule {
         }
     }
 }
+
+impl Default for Molecule {
+    fn default() -> Self {
+        Molecule::new()
+    }
+}

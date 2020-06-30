@@ -14,14 +14,15 @@ impl Point3d {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::test_utils::assert_f64_eq;
 
     #[test]
     fn new_from_coordinates() {
         let point = Point3d::new(1.0, 2.0, 3.5);
 
-        assert_eq!(point.x, 1.0);
-        assert_eq!(point.y, 2.0);
-        assert_eq!(point.z, 3.5);
+        assert_f64_eq(point.x, 1.0);
+        assert_f64_eq(point.y, 2.0);
+        assert_f64_eq(point.z, 3.5);
     }
 
     #[test]

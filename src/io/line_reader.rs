@@ -26,7 +26,7 @@ impl<R: Read> LineReader<R> {
         }
     }
 
-    pub fn read_lines<'a>(&'a mut self, count: u32) -> LineReaderIter<'a, R> {
+    pub fn read_lines(&mut self, count: u32) -> LineReaderIter<'_, R> {
         LineReaderIter {
             line_reader: self,
             count,

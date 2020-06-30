@@ -6,8 +6,8 @@ use std::fmt;
 
 lazy_static! {
     static ref ELEMENTS_BY_NUMBER: HashMap<u32, Element> = {
-        let elements_config = include_str!("../../data_files/elements.csv").as_bytes();
-        let mut config_reader = csv::Reader::from_reader(elements_config);
+        let elements_config = include_bytes!("../../data_files/elements.csv");
+        let mut config_reader = csv::Reader::from_reader(&elements_config[..]);
 
         let mut map: HashMap<u32, Element> = HashMap::new();
 

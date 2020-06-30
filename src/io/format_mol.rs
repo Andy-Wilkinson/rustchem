@@ -74,7 +74,7 @@ struct CountsLine {
 }
 
 fn parse_u32_default(val: &str, dest_nature: &str) -> Result<u32, ParseError> {
-    if val.trim().len() == 0 {
+    if val.trim().is_empty() {
         Ok(0)
     } else {
         parse_u32(val, dest_nature)
@@ -82,7 +82,7 @@ fn parse_u32_default(val: &str, dest_nature: &str) -> Result<u32, ParseError> {
 }
 
 fn parse_i32_default(val: &str, dest_nature: &str) -> Result<i32, ParseError> {
-    if val.trim().len() == 0 {
+    if val.trim().is_empty() {
         Ok(0)
     } else {
         parse_i32(val, dest_nature)
@@ -90,7 +90,7 @@ fn parse_i32_default(val: &str, dest_nature: &str) -> Result<i32, ParseError> {
 }
 
 fn parse_usize_default(val: &str, dest_nature: &str) -> Result<usize, ParseError> {
-    if val.trim().len() == 0 {
+    if val.trim().is_empty() {
         Ok(0)
     } else {
         parse_usize(val, dest_nature)
@@ -173,8 +173,8 @@ pub fn parse_bond_line(line: &str) -> Result<Bond, ParseError> {
 }
 
 pub fn reset_atom_charges(atoms: &mut Vec<Atom>) {
-    for i in 0..atoms.len() {
-        atoms[i].formal_charge = 0;
+    for atom in atoms {
+        atom.formal_charge = 0;
         // TODO: atom.radical = 0;
     }
 }

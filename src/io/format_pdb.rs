@@ -72,6 +72,7 @@ fn parse_pdb_atom(line: &str) -> Result<Atom, ParseError> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::test_utils::assert_f64_eq;
 
     #[test]
     fn parse_atom_atomic_element() -> Result<(), ParseError> {
@@ -87,9 +88,9 @@ mod tests {
         let line =
             "ATOM      4  CA  ALA L   1B     13.000  21.098  20.348  1.00 20.50      A    C  ";
         let atom = parse_pdb_atom(&line)?;
-        assert_eq!(atom.position.x, 13.000);
-        assert_eq!(atom.position.y, 21.098);
-        assert_eq!(atom.position.z, 20.348);
+        assert_f64_eq(atom.position.x, 13.000);
+        assert_f64_eq(atom.position.y, 21.098);
+        assert_f64_eq(atom.position.z, 20.348);
         Ok(())
     }
 
