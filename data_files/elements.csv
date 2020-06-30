@@ -1,4 +1,4 @@
-atomic_number,symbol
-12,C
-14,N
-16,O
+atomic_number,symbol,most_common_isotope
+12,C,12
+14,N,14
+16,O,16

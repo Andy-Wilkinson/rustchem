@@ -34,6 +34,7 @@ lazy_static! {
 pub struct Element {
     pub atomic_number: u32,
     pub symbol: String,
+    pub most_common_isotope: u32,
 }
 
 impl Element {
@@ -86,6 +87,7 @@ mod tests {
 
         assert_eq!(element_c.atomic_number, 12);
         assert_eq!(element_c.symbol, "C");
+        assert_eq!(element_c.most_common_isotope, 12);
 
         Ok(())
     }

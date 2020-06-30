@@ -1,6 +1,6 @@
 use crate::mol::{Atom, Bond, Molecule, Point3d};
 use super::{FileReadError, ParseError, LineReader};
-use super::utils::{parse_u32, parse_usize, parse_f64};
+use super::utils::{parse_u32, parse_i32, parse_usize, parse_f64};
 
 // Reference: https://web.archive.org/web/20070630061308/http:/www.mdl.com/downloads/public/ctfile/ctfile.pdf
 
@@ -64,6 +64,10 @@ fn parse_u32_default(val: &str, dest_nature: &str) -> Result<u32, ParseError> {
     if val.trim().len() == 0 { Ok(0) } else { parse_u32(val, dest_nature) }
 }
 
+fn parse_i32_default(val: &str, dest_nature: &str) -> Result<i32, ParseError> {
+    if val.trim().len() == 0 { Ok(0) } else { parse_i32(val, dest_nature) }
+}
+
 fn parse_usize_default(val: &str, dest_nature: &str) -> Result<usize, ParseError> {
     if val.trim().len() == 0 { Ok(0) } else { parse_usize(val, dest_nature) }
 }
@@ -89,7 +93,7 @@ pub fn parse_atom_line(line: &str) -> Result<Atom, ParseError> {
     let y = parse_f64(&line[10..20], "y-coordinate")?;
     let z = parse_f64(&line[20..30], "z-coordinate")?;
     let symbol = &line[31..34].trim();
-    let _mass_difference = parse_u32_default(&line[34..36], "mass difference")?;
+    let mass_difference = parse_i32_default(&line[34..36], "mass difference")?;
     let charge_id = parse_u32_default(&line[36..39], "charge")?;
     let _stereo_parity = parse_u32_default(&line[39..42], "atom stereo parity")?;
     let _hydrogen_count = parse_u32_default(&line[42..45], "hydrogen count")?;
@@ -110,6 +114,11 @@ pub fn parse_atom_line(line: &str) -> Result<Atom, ParseError> {
     let mut atom = Atom::from_symbol(symbol)?;
     atom.formal_charge = formal_charge;
     atom.position = Point3d::new(x, y, z);
+
+    if mass_difference >= -3 && mass_difference <= 3 && mass_difference != 0 {
+        atom.isotope = Some(((atom.element.most_common_isotope) as i32 + mass_difference) as u32);
+    }
+
     Ok(atom)
 }
 
@@ -151,6 +160,83 @@ mod tests {
         assert_eq!(counts_lines.num_stext, 0);
         assert_eq!(counts_lines.num_properties, 3);
         assert_eq!(counts_lines.version, " V2000");
+        Ok(())
+    }
+
+    #[test]
+    fn parse_atom_standard() -> Result<(), ParseError> {
+        let line = "   -0.6622    0.5342    0.0000 C   0  0  2  0  0  0";
+        let atom = parse_atom_line(&line)?;
+
+        assert_eq!(atom.element.atomic_number, 12);
+        assert_eq!(atom.position, Point3d::new(-0.6622, 0.5342, 0.0000));
+        assert_eq!(atom.formal_charge, 0);
+        assert_eq!(atom.isotope, None);
+        assert_eq!(atom.properties.len(), 0);
+
+        Ok(())
+    }
+
+    #[test]
+    fn parse_atom_charged() -> Result<(), ParseError> {
+        let line_pos3 = "   -0.6622    0.5342    0.0000 C   0  1  2  0  0  0";
+        let line_pos2 = "   -0.6622    0.5342    0.0000 C   0  2  2  0  0  0";
+        let line_pos1 = "   -0.6622    0.5342    0.0000 C   0  3  2  0  0  0";
+        let line_neg1 = "   -0.6622    0.5342    0.0000 C   0  5  2  0  0  0";
+        let line_neg2 = "   -0.6622    0.5342    0.0000 C   0  6  2  0  0  0";
+        let line_neg3 = "   -0.6622    0.5342    0.0000 C   0  7  2  0  0  0";
+
+        let atom_pos3 = parse_atom_line(&line_pos3)?;
+        let atom_pos2 = parse_atom_line(&line_pos2)?;
+        let atom_pos1 = parse_atom_line(&line_pos1)?;
+        let atom_neg1 = parse_atom_line(&line_neg1)?;
+        let atom_neg2 = parse_atom_line(&line_neg2)?;
+        let atom_neg3 = parse_atom_line(&line_neg3)?;
+
+        assert_eq!(atom_pos3.formal_charge, 3);
+        assert_eq!(atom_pos2.formal_charge, 2);
+        assert_eq!(atom_pos1.formal_charge, 1);
+        assert_eq!(atom_neg1.formal_charge, -1);
+        assert_eq!(atom_neg2.formal_charge, -2);
+        assert_eq!(atom_neg3.formal_charge, -3);
+
+        Ok(())
+    }
+
+    #[test]
+    fn parse_atom_isotope() -> Result<(), ParseError> {
+        let line_c13 = "   -0.6622    0.5342    0.0000 C   1  0  2  0  0  0";
+        let line_c14 = "   -0.6622    0.5342    0.0000 C   2  0  2  0  0  0";
+        let line_c11 = "   -0.6622    0.5342    0.0000 C  -1  0  2  0  0  0";
+        let line_n15 = "   -0.6622    0.5342    0.0000 N   1  0  2  0  0  0";
+
+        let atom_c13 = parse_atom_line(&line_c13)?;
+        let atom_c14 = parse_atom_line(&line_c14)?;
+        let atom_c11 = parse_atom_line(&line_c11)?;
+        let atom_n15 = parse_atom_line(&line_n15)?;
+
+        assert_eq!(atom_c13.isotope, Some(13));
+        assert_eq!(atom_c14.isotope, Some(14));
+        assert_eq!(atom_c11.isotope, Some(11));
+        assert_eq!(atom_n15.isotope, Some(15));
+
+        Ok(())
+    }
+
+    #[test]
+    fn parse_atom_isotope_outofrange() -> Result<(), ParseError> {
+        let line_1 = "   -0.6622    0.5342    0.0000 C  -4  0  2  0  0  0";
+        let line_2 = "   -0.6622    0.5342    0.0000 C   4  0  2  0  0  0";
+        let line_3 = "   -0.6622    0.5342    0.0000 C   0  0  2  0  0  0";
+
+        let atom_1 = parse_atom_line(&line_1)?;
+        let atom_2 = parse_atom_line(&line_2)?;
+        let atom_3 = parse_atom_line(&line_3)?;
+
+        assert_eq!(atom_1.isotope, None);
+        assert_eq!(atom_2.isotope, None);
+        assert_eq!(atom_3.isotope, None);
+
         Ok(())
     }
 }

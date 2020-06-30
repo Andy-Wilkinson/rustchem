@@ -5,6 +5,7 @@ pub struct Atom {
     pub element: &'static Element,
     pub position: Point3d,
     pub formal_charge: i32,
+    pub isotope: Option<u32>,
     pub properties: PropertyMap<AtomProperty>,
 }
 
@@ -21,6 +22,7 @@ impl Atom {
             element,
             position: Point3d::new(0.0, 0.0, 0.0),
             formal_charge: 0,
+            isotope: None,
             properties: PropertyMap::new(),
         }
     }
@@ -47,6 +49,7 @@ mod tests {
         assert_eq!(atom.element.atomic_number, 12);
         assert_eq!(atom.position, Point3d::new(0.0, 0.0, 0.0));
         assert_eq!(atom.formal_charge, 0);
+        assert_eq!(atom.isotope, None);
         assert_eq!(atom.properties.len(), 0);
 
         Ok(())
@@ -59,6 +62,7 @@ mod tests {
         assert_eq!(atom.element.atomic_number, 12);
         assert_eq!(atom.position, Point3d::new(0.0, 0.0, 0.0));
         assert_eq!(atom.formal_charge, 0);
+        assert_eq!(atom.isotope, None);
         assert_eq!(atom.properties.len(), 0);
 
         Ok(())
@@ -83,6 +87,7 @@ mod tests {
         assert_eq!(atom.element.atomic_number, 12);
         assert_eq!(atom.position, Point3d::new(0.0, 0.0, 0.0));
         assert_eq!(atom.formal_charge, 0);
+        assert_eq!(atom.isotope, None);
         assert_eq!(atom.properties.len(), 0);
 
         Ok(())
