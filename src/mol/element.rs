@@ -1,8 +1,8 @@
-use std::collections::HashMap;
-use std::fmt;
+use super::MoleculeError;
 use lazy_static::lazy_static;
 use serde::Deserialize;
-use super::MoleculeError;
+use std::collections::HashMap;
+use std::fmt;
 
 lazy_static! {
     static ref ELEMENTS_BY_NUMBER: HashMap<u32, Element> = {
@@ -12,13 +12,13 @@ lazy_static! {
         let mut map: HashMap<u32, Element> = HashMap::new();
 
         for element in config_reader.deserialize() {
-            let element: Element = element.expect("Unable to deserialize embedded elements.csv configuration file.");
+            let element: Element =
+                element.expect("Unable to deserialize embedded elements.csv configuration file.");
             map.insert(element.atomic_number, element);
         }
 
         map
     };
-
     static ref ELEMENTS_BY_SYMBOL: HashMap<String, &'static Element> = {
         let mut map: HashMap<String, &'static Element> = HashMap::new();
 
@@ -41,14 +41,14 @@ impl Element {
     pub fn from_atomic_number(atomic_number: u32) -> Result<&'static Element, MoleculeError> {
         match ELEMENTS_BY_NUMBER.get(&atomic_number) {
             Some(element) => Ok(element),
-            None => Err(MoleculeError::UnknownAtomicNumber(atomic_number))
+            None => Err(MoleculeError::UnknownAtomicNumber(atomic_number)),
         }
     }
 
     pub fn from_symbol(symbol: &str) -> Result<&'static Element, MoleculeError> {
         match ELEMENTS_BY_SYMBOL.get(symbol) {
             Some(element) => Ok(element),
-            None => Err(MoleculeError::UnknownElementSymbol(symbol.to_string()))
+            None => Err(MoleculeError::UnknownElementSymbol(symbol.to_string())),
         }
     }
 }
@@ -64,7 +64,6 @@ impl fmt::Debug for Element {
         f.write_str(&self.symbol)
     }
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -97,8 +96,8 @@ mod tests {
         match Element::from_atomic_number(1234) {
             Err(MoleculeError::UnknownAtomicNumber(atomic_number)) => {
                 assert_eq!(atomic_number, 1234);
-            },
-            _ => panic!("Expected MoleculeError::UnknownAtomicNumber") 
+            }
+            _ => panic!("Expected MoleculeError::UnknownAtomicNumber"),
         }
 
         Ok(())
@@ -120,8 +119,8 @@ mod tests {
         match Element::from_symbol("X") {
             Err(MoleculeError::UnknownElementSymbol(symbol)) => {
                 assert_eq!(symbol, "X");
-            },
-            _ => panic!("Expected MoleculeError::UnknownElementSymbol") 
+            }
+            _ => panic!("Expected MoleculeError::UnknownElementSymbol"),
         }
 
         Ok(())
@@ -129,8 +128,14 @@ mod tests {
 
     #[test]
     fn equality() -> Result<(), MoleculeError> {
-        assert_eq!(Element::from_atomic_number(12)?, Element::from_atomic_number(12)?);
-        assert_ne!(Element::from_atomic_number(14)?, Element::from_atomic_number(12)?);
+        assert_eq!(
+            Element::from_atomic_number(12)?,
+            Element::from_atomic_number(12)?
+        );
+        assert_ne!(
+            Element::from_atomic_number(14)?,
+            Element::from_atomic_number(12)?
+        );
 
         Ok(())
     }

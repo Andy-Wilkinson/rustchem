@@ -8,8 +8,7 @@ pub struct Bond {
 }
 
 #[derive(PartialEq, Eq, Hash, Debug)]
-pub enum BondProperty {
-}
+pub enum BondProperty {}
 
 impl Bond {
     pub fn new(from_atom_id: AtomIndex, to_atom_id: AtomIndex) -> Bond {
@@ -23,13 +22,13 @@ impl Bond {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use super::super::MoleculeError;
+    use super::*;
 
     #[test]
     fn new() -> Result<(), MoleculeError> {
         let bond = Bond::new(1, 2);
-        
+
         assert_eq!(bond.from_atom_id, 1);
         assert_eq!(bond.to_atom_id, 2);
 

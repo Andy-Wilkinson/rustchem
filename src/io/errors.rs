@@ -3,7 +3,7 @@ use thiserror::Error;
 #[derive(Error, Debug)]
 pub enum FileReadError {
     #[error("Error in line {line}")]
-    LineParse { source: ParseError, line:usize },
+    LineParse { source: ParseError, line: usize },
 
     #[error(transparent)]
     IOError(#[from] std::io::Error),
@@ -15,10 +15,18 @@ pub enum ParseError {
     Parse { name: String, value: String },
 
     #[error("'{value}' is not a valid {name}")]
-    ParseInt { source: std::num::ParseIntError, name: String, value: String },
+    ParseInt {
+        source: std::num::ParseIntError,
+        name: String,
+        value: String,
+    },
 
     #[error("'{value}' is not a valid {name}")]
-    ParseFloat { source: std::num::ParseFloatError, name: String, value: String },
+    ParseFloat {
+        source: std::num::ParseFloatError,
+        name: String,
+        value: String,
+    },
 
     #[error("The line is too short")]
     LineTooShort,

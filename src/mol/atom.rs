@@ -1,4 +1,4 @@
-use super::{Element, Point3d, PropertyMap, MoleculeError};
+use super::{Element, MoleculeError, Point3d, PropertyMap};
 
 #[derive(Debug)]
 pub struct Atom {
@@ -36,7 +36,6 @@ impl Atom {
     }
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -45,7 +44,7 @@ mod tests {
     fn new_from_element() -> Result<(), MoleculeError> {
         let element = Element::from_atomic_number(12)?;
         let atom = Atom::new(element);
-        
+
         assert_eq!(atom.element.atomic_number, 12);
         assert_eq!(atom.position, Point3d::new(0.0, 0.0, 0.0));
         assert_eq!(atom.formal_charge, 0);
@@ -58,7 +57,7 @@ mod tests {
     #[test]
     fn new_from_atomic_number() -> Result<(), MoleculeError> {
         let atom = Atom::from_atomic_number(12)?;
-        
+
         assert_eq!(atom.element.atomic_number, 12);
         assert_eq!(atom.position, Point3d::new(0.0, 0.0, 0.0));
         assert_eq!(atom.formal_charge, 0);
@@ -73,8 +72,8 @@ mod tests {
         match Atom::from_atomic_number(1234) {
             Err(MoleculeError::UnknownAtomicNumber(atomic_number)) => {
                 assert_eq!(atomic_number, 1234);
-            },
-            _ => panic!("Expected MoleculeError::UnknownAtomicNumber") 
+            }
+            _ => panic!("Expected MoleculeError::UnknownAtomicNumber"),
         }
 
         Ok(())
@@ -83,7 +82,7 @@ mod tests {
     #[test]
     fn new_from_symbol() -> Result<(), MoleculeError> {
         let atom = Atom::from_symbol("C")?;
-        
+
         assert_eq!(atom.element.atomic_number, 12);
         assert_eq!(atom.position, Point3d::new(0.0, 0.0, 0.0));
         assert_eq!(atom.formal_charge, 0);
@@ -98,8 +97,8 @@ mod tests {
         match Atom::from_symbol("X") {
             Err(MoleculeError::UnknownElementSymbol(symbol)) => {
                 assert_eq!(symbol, "X");
-            },
-            _ => panic!("Expected MoleculeError::UnknownElementSymbol") 
+            }
+            _ => panic!("Expected MoleculeError::UnknownElementSymbol"),
         }
 
         Ok(())

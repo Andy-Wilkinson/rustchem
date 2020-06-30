@@ -1,7 +1,7 @@
-use std::io::{BufReader, BufRead};
-use crate::mol::{Atom, Molecule, Point3d};
+use super::utils::{parse_f64, parse_i32, parse_u32};
 use super::{FileReadError, ParseError};
-use super::utils::{parse_u32, parse_i32, parse_f64};
+use crate::mol::{Atom, Molecule, Point3d};
+use std::io::{BufRead, BufReader};
 
 pub fn read_pdb(reader: impl std::io::Read) -> Result<Molecule, FileReadError> {
     let reader = BufReader::new(reader).lines();
@@ -9,18 +9,25 @@ pub fn read_pdb(reader: impl std::io::Read) -> Result<Molecule, FileReadError> {
 
     for (count, line) in reader.enumerate() {
         let line = line?;
-        let line = if line.len() >= 80 { line } else { format!("{:80}", line) };
+        let line = if line.len() >= 80 {
+            line
+        } else {
+            format!("{:80}", line)
+        };
 
         match &line[..6] {
-            "      " => {},
+            "      " => {}
             "ATOM  " | "HETATM" => {
-                let atom = parse_pdb_atom(&line).map_err(|source| FileReadError::LineParse { source, line: count + 1})?;
+                let atom = parse_pdb_atom(&line).map_err(|source| FileReadError::LineParse {
+                    source,
+                    line: count + 1,
+                })?;
                 atoms.push(atom);
-            },
-            "TER   " => {},
-            "CONECT" => {},
-            "END   " => {},
-            _ => panic!("Unknown identifier '{}'", &line[..6])
+            }
+            "TER   " => {}
+            "CONECT" => {}
+            "END   " => {}
+            _ => panic!("Unknown identifier '{}'", &line[..6]),
         };
     }
 
@@ -48,7 +55,12 @@ fn parse_pdb_atom(line: &str) -> Result<Atom, ParseError> {
         " " => 0,
         "+" => parse_i32(&charge[0..1], "charge")?,
         "-" => -parse_i32(&charge[0..1], "charge")?,
-        _ => return Err(ParseError::Parse {name: "charge".to_string(), value: charge.to_string()})
+        _ => {
+            return Err(ParseError::Parse {
+                name: "charge".to_string(),
+                value: charge.to_string(),
+            })
+        }
     };
 
     let mut atom = Atom::from_symbol(element)?;
@@ -57,14 +69,14 @@ fn parse_pdb_atom(line: &str) -> Result<Atom, ParseError> {
     Ok(atom)
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
     fn parse_atom_atomic_element() -> Result<(), ParseError> {
-        let line = "ATOM      4  CA  ALA L   1B     13.000  21.098  20.348  1.00 20.50      A    C  ";
+        let line =
+            "ATOM      4  CA  ALA L   1B     13.000  21.098  20.348  1.00 20.50      A    C  ";
         let atom = parse_pdb_atom(&line)?;
         assert_eq!(atom.element.atomic_number, 12);
         Ok(())
@@ -72,7 +84,8 @@ mod tests {
 
     #[test]
     fn parse_atom_position() -> Result<(), ParseError> {
-        let line = "ATOM      4  CA  ALA L   1B     13.000  21.098  20.348  1.00 20.50      A    C  ";
+        let line =
+            "ATOM      4  CA  ALA L   1B     13.000  21.098  20.348  1.00 20.50      A    C  ";
         let atom = parse_pdb_atom(&line)?;
         assert_eq!(atom.position.x, 13.000);
         assert_eq!(atom.position.y, 21.098);
@@ -82,7 +95,8 @@ mod tests {
 
     #[test]
     fn parse_atom_formal_charge_zero() -> Result<(), ParseError> {
-        let line = "ATOM      4  CA  ALA L   1B     13.000  21.098  20.348  1.00 20.50      A    C  ";
+        let line =
+            "ATOM      4  CA  ALA L   1B     13.000  21.098  20.348  1.00 20.50      A    C  ";
         let atom = parse_pdb_atom(&line)?;
         assert_eq!(atom.formal_charge, 0);
         Ok(())
@@ -90,7 +104,8 @@ mod tests {
 
     #[test]
     fn parse_atom_formal_charge_positive() -> Result<(), ParseError> {
-        let line = "ATOM     47  NH1 ARG L   4       0.065   9.975  21.485  1.00  7.68      A    N1+";
+        let line =
+            "ATOM     47  NH1 ARG L   4       0.065   9.975  21.485  1.00  7.68      A    N1+";
         let atom = parse_pdb_atom(&line)?;
         assert_eq!(atom.formal_charge, 1);
         Ok(())
@@ -98,7 +113,8 @@ mod tests {
 
     #[test]
     fn parse_atom_formal_charge_negative() -> Result<(), ParseError> {
-        let line = "ATOM     17  OD2 ASP L   1A      7.250  19.552  18.526  0.50 22.65      A    O1-";
+        let line =
+            "ATOM     17  OD2 ASP L   1A      7.250  19.552  18.526  0.50 22.65      A    O1-";
         let atom = parse_pdb_atom(&line)?;
         assert_eq!(atom.formal_charge, -1);
         Ok(())

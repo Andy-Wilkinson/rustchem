@@ -1,6 +1,6 @@
+use super::utils::{parse_f64, parse_i32, parse_u32, parse_usize};
+use super::{FileReadError, LineReader, ParseError};
 use crate::mol::{Atom, Bond, Molecule, Point3d};
-use super::{FileReadError, ParseError, LineReader};
-use super::utils::{parse_u32, parse_i32, parse_usize, parse_f64};
 
 // Reference: https://web.archive.org/web/20070630061308/http:/www.mdl.com/downloads/public/ctfile/ctfile.pdf
 
@@ -14,20 +14,27 @@ pub fn read_mol(reader: impl std::io::Read) -> Result<Molecule, FileReadError> {
     line_reader.read_line()?;
     line_reader.read_line()?;
 
-    let counts_line = parse_counts(&line_reader.read_line()?).map_err(|source| FileReadError::LineParse { source, line: 3})?;
+    let counts_line = parse_counts(&line_reader.read_line()?)
+        .map_err(|source| FileReadError::LineParse { source, line: 3 })?;
 
     for (line_number, atom_line) in line_reader.read_lines(counts_line.num_atoms).enumerate() {
-        let atom = parse_atom_line(&atom_line?).map_err(|source| FileReadError::LineParse { source, line: line_number + 3 })?;
+        let atom = parse_atom_line(&atom_line?).map_err(|source| FileReadError::LineParse {
+            source,
+            line: line_number + 3,
+        })?;
         atoms.push(atom);
-    };
+    }
 
     for (line_number, bond_line) in line_reader.read_lines(counts_line.num_bonds).enumerate() {
-        let bond = parse_bond_line(&bond_line?).map_err(|source| FileReadError::LineParse { source, line: counts_line.num_atoms as usize + line_number + 3 })?;
+        let bond = parse_bond_line(&bond_line?).map_err(|source| FileReadError::LineParse {
+            source,
+            line: counts_line.num_atoms as usize + line_number + 3,
+        })?;
         bonds.push(bond);
-    };
+    }
 
-    for _ in line_reader.read_lines(counts_line.num_atom_lists) {};
-    for _ in line_reader.read_lines(counts_line.num_stext * 2) {};
+    for _ in line_reader.read_lines(counts_line.num_atom_lists) {}
+    for _ in line_reader.read_lines(counts_line.num_stext * 2) {}
 
     let mut has_charge_props = false;
 
@@ -36,14 +43,20 @@ pub fn read_mol(reader: impl std::io::Read) -> Result<Molecule, FileReadError> {
         match &line[..6] {
             "M  END" => break,
             "M  CHG" => {
-                if !has_charge_props { reset_atom_charges(&mut atoms); has_charge_props = true };
-            },
+                if !has_charge_props {
+                    reset_atom_charges(&mut atoms);
+                    has_charge_props = true
+                };
+            }
             "M  RAD" => {
-                if !has_charge_props { reset_atom_charges(&mut atoms); has_charge_props = true };
-            },
-            _ => {},
+                if !has_charge_props {
+                    reset_atom_charges(&mut atoms);
+                    has_charge_props = true
+                };
+            }
+            _ => {}
         }
-    };
+    }
 
     let molecule = Molecule::from_graph(atoms, bonds);
     Ok(molecule)
@@ -61,15 +74,27 @@ struct CountsLine {
 }
 
 fn parse_u32_default(val: &str, dest_nature: &str) -> Result<u32, ParseError> {
-    if val.trim().len() == 0 { Ok(0) } else { parse_u32(val, dest_nature) }
+    if val.trim().len() == 0 {
+        Ok(0)
+    } else {
+        parse_u32(val, dest_nature)
+    }
 }
 
 fn parse_i32_default(val: &str, dest_nature: &str) -> Result<i32, ParseError> {
-    if val.trim().len() == 0 { Ok(0) } else { parse_i32(val, dest_nature) }
+    if val.trim().len() == 0 {
+        Ok(0)
+    } else {
+        parse_i32(val, dest_nature)
+    }
 }
 
 fn parse_usize_default(val: &str, dest_nature: &str) -> Result<usize, ParseError> {
-    if val.trim().len() == 0 { Ok(0) } else { parse_usize(val, dest_nature) }
+    if val.trim().len() == 0 {
+        Ok(0)
+    } else {
+        parse_usize(val, dest_nature)
+    }
 }
 
 fn parse_counts(line: &str) -> Result<CountsLine, ParseError> {
@@ -82,12 +107,16 @@ fn parse_counts(line: &str) -> Result<CountsLine, ParseError> {
         num_properties: parse_u32_default(&line[30..33], "property list count")?,
         version: line[33..39].to_string(),
     };
-    
+
     Ok(counts_line)
 }
 
 pub fn parse_atom_line(line: &str) -> Result<Atom, ParseError> {
-    let line = if line.len() >= 69 { line.to_string() } else { format!("{:69}", line) };
+    let line = if line.len() >= 69 {
+        line.to_string()
+    } else {
+        format!("{:69}", line)
+    };
 
     let x = parse_f64(&line[0..10], "x-coordinate")?;
     let y = parse_f64(&line[10..20], "y-coordinate")?;
@@ -105,12 +134,16 @@ pub fn parse_atom_line(line: &str) -> Result<Atom, ParseError> {
     let _exact_change_flag = parse_u32_default(&line[66..69], "inversion/retention flag")?;
 
     let formal_charge = match charge_id {
-        1 => 3, 2 => 2, 3 => 1,
+        1 => 3,
+        2 => 2,
+        3 => 1,
         // TODO: 4 = doublet radical
-        5 => -1,  6 => -2, 7 => -3,
-        _ => 0
+        5 => -1,
+        6 => -2,
+        7 => -3,
+        _ => 0,
     };
-    
+
     let mut atom = Atom::from_symbol(symbol)?;
     atom.formal_charge = formal_charge;
     atom.position = Point3d::new(x, y, z);
@@ -123,7 +156,11 @@ pub fn parse_atom_line(line: &str) -> Result<Atom, ParseError> {
 }
 
 pub fn parse_bond_line(line: &str) -> Result<Bond, ParseError> {
-    let line = if line.len() >= 21 { line.to_string() } else { format!("{:21}", line) };
+    let line = if line.len() >= 21 {
+        line.to_string()
+    } else {
+        format!("{:21}", line)
+    };
 
     let from_atom_id = parse_usize_default(&line[0..3], "atom 1")?;
     let to_atom_id = parse_usize_default(&line[3..6], "atom 2")?;
@@ -132,7 +169,6 @@ pub fn parse_bond_line(line: &str) -> Result<Bond, ParseError> {
     let _bond_stereo = parse_u32_default(&line[15..18], "bond topology")?;
     let _reacting_center = parse_u32_default(&line[18..21], "reacting center status")?;
 
-    
     Ok(Bond::new(from_atom_id - 1, to_atom_id - 1))
 }
 
@@ -143,7 +179,6 @@ pub fn reset_atom_charges(atoms: &mut Vec<Atom>) {
     }
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -152,7 +187,7 @@ mod tests {
     fn parse_counts_okay() -> Result<(), ParseError> {
         let line = "  6  5  0  0  1  0              3 V2000";
         let counts_lines = parse_counts(&line)?;
-        
+
         assert_eq!(counts_lines.num_atoms, 6);
         assert_eq!(counts_lines.num_bonds, 5);
         assert_eq!(counts_lines.num_atom_lists, 0);
