@@ -98,6 +98,23 @@ fn parse_usize_default(val: &str, dest_nature: &str) -> Result<usize, ParseError
 }
 
 fn parse_counts(line: &str) -> Result<CountsLine, ParseError> {
+    /*
+    Counts Line: 'aaabbblllfffcccsssxxxrrrpppiiimmmvvvvvv'
+
+    aaa = number of atoms (maximum 255 for some software)
+    bbb = number of bonds (maximum 255 for some software)
+    lll = number of atom lists (maximum of 30 for some software)
+    fff = (obsolete)
+    ccc = chiral flag (1=chiral, 0=achiral)
+    sss = number of stext entries
+    xxx = (obsolete)
+    rrr = (obsolete)
+    ppp = (obsolete)
+    iii = (obsolete)
+    mmm = number of additional property lines including 'M END' (now obselete and assigned to 999)
+    vvvvvv = version string (' V2000' or ' V3000')
+    */
+
     let counts_line = CountsLine {
         num_atoms: parse_u32_default(&line[0..3], "atom count")?,
         num_bonds: parse_u32_default(&line[3..6], "bond count")?,
@@ -112,6 +129,28 @@ fn parse_counts(line: &str) -> Result<CountsLine, ParseError> {
 }
 
 pub fn parse_atom_line(line: &str) -> Result<Atom, ParseError> {
+    /*
+    Atom Block: 'xxxxx.xxxxyyyyy.yyyyzzzzz.zzzz aaaddcccssshhhbbbvvvHHHrrriiimmmnnneee'
+
+    xxxxx.xxxx = x-coordinate
+    yyyyy.yyyy = y-coordinate
+    zzzzz.zzzz = z-coordinate
+    aaa = atom symbol (or 'L'=atom list, 'A'/'Q'/'*'=unspecified, 'LP'=lone pair, 'R#'=R-group)
+    dd = mass difference from default isotope (range -3..4, outside of limits are zero, 'M ISO' takes precedence)
+    ccc = charge(0=uncharged, 1=+3, 2=+2, 3=+1, 5=-1, 6=-2, 7=-3, 4=doublet radical, 'M CHG/RAD' take precedence)
+    sss = atom stero-parity (0=not stereo, 1=odd, 2=even, 3=either/unmarked, Ignored when read)
+    hhh (*) = hydrogen count + 1 (1=H0 (no H-atoms allowed unless drawn), 2..5=Hn ('n' or more H-atoms + those drawn)
+    bbb (*) = stereo care box (for double bond stereochemistry, 0=ignore, 1=must match drawn, NB: must be 1 at both ends of bond)
+    vvv = valence (0=unspecified, 1..14=number of bonds to atom including implied H-atoms, 15=zero valence)
+    HHH = H0 designator (redundant with 'hhh' and not used)
+    rrr = (not used)
+    iii = (not used)
+    mmm = atom-atom mapping number (for reactions, 1..number of atoms)
+    nnn = inversion/retention flag (for reactions, 0=not applied, 1=inversion, 2=retention)
+    eee (*) = exact change flag (for reactions, 0=not applied, 1=change on atom must be exactly as shown)
+
+    NB: (*) specifies properties that apply only to queries
+    */
     let line = if line.len() >= 69 {
         line.to_string()
     } else {
@@ -156,6 +195,20 @@ pub fn parse_atom_line(line: &str) -> Result<Atom, ParseError> {
 }
 
 pub fn parse_bond_line(line: &str) -> Result<Bond, ParseError> {
+    /*
+    Bond Block: '111222tttsssxxxrrrccc'
+
+    111 = first atom index (starting from 1)
+    222 = second atom index (starting from 1)
+    ttt = bond type (1=single, 2=double, 3=triple; (*) 4=aromatic, 5=single/double, 6=single/aromatic, 7=double/aromatic, 8=any)
+    sss = bond stereo (Single bonds 0=none, 1=up, 4=either, 6=down; Double bonds 0=as drawn, 3=either cis/trans)
+    xxx = (not used)
+    rrr (*) = bond topology (0=either, 1=ring, 2=chain)
+    ccc (*) = reacting centre status (0=unmarked, 1=center, -1=not center, 2=no change, 4=made/broken, 8=bond order change, 4+8, 4+1, 8+1, 12+1)
+
+    NB: (*) specifies properties that apply only to queries
+    */
+
     let line = if line.len() >= 21 {
         line.to_string()
     } else {
