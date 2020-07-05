@@ -56,7 +56,7 @@ fn parse_pdb_atom(line: &str) -> Result<Atom, ParseError> {
         "+" => parse_i32(&charge[0..1], "charge")?,
         "-" => -parse_i32(&charge[0..1], "charge")?,
         _ => {
-            return Err(ParseError::Parse {
+            return Err(ParseError::InvalidValue {
                 name: "charge".to_string(),
                 value: charge.to_string(),
             })

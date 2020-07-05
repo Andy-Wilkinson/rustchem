@@ -12,7 +12,7 @@ pub enum FileReadError {
 #[derive(Error, Debug)]
 pub enum ParseError {
     #[error("'{value}' is not a valid {name}")]
-    Parse { name: String, value: String },
+    InvalidValue { name: String, value: String },
 
     #[error("'{value}' is not a valid {name}")]
     ParseInt {

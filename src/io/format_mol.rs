@@ -1,6 +1,6 @@
 use super::utils::{parse_f64, parse_i32, parse_u32, parse_usize};
 use super::{FileReadError, LineReader, ParseError};
-use crate::mol::{Atom, Bond, Molecule, Point3d};
+use crate::mol::{Atom, Bond, BondType, Molecule, Point3d};
 
 // Reference: https://web.archive.org/web/20070630061308/http:/www.mdl.com/downloads/public/ctfile/ctfile.pdf
 
@@ -217,12 +217,29 @@ pub fn parse_bond_line(line: &str) -> Result<Bond, ParseError> {
 
     let from_atom_id = parse_usize_default(&line[0..3], "atom 1")?;
     let to_atom_id = parse_usize_default(&line[3..6], "atom 2")?;
-    let _bond_type = parse_u32_default(&line[6..9], "bond type")?;
+    let bond_type = parse_u32_default(&line[6..9], "bond type")?;
     let _bond_stereo = parse_u32_default(&line[9..12], "bond stereochemistry")?;
     let _bond_stereo = parse_u32_default(&line[15..18], "bond topology")?;
     let _reacting_center = parse_u32_default(&line[18..21], "reacting center status")?;
 
-    Ok(Bond::new(from_atom_id - 1, to_atom_id - 1))
+    let bond_type = match bond_type {
+        1 => BondType::single(),
+        2 => BondType::double(),
+        3 => BondType::triple(),
+        4 => BondType::Aromatic,
+        5 => BondType::single_or_double(),
+        6 => BondType::single_or_aromatic(),
+        7 => BondType::double_or_aromatic(),
+        8 => BondType::Any,
+        _ => {
+            return Err(ParseError::InvalidValue {
+                name: "bond type".to_string(),
+                value: line[6..9].to_string(),
+            })
+        }
+    };
+
+    Ok(Bond::new(from_atom_id - 1, to_atom_id - 1, bond_type))
 }
 
 pub fn reset_atom_charges(atoms: &mut Vec<Atom>) {
@@ -324,6 +341,89 @@ mod tests {
         assert_eq!(atom_1.isotope, None);
         assert_eq!(atom_2.isotope, None);
         assert_eq!(atom_3.isotope, None);
+
+        Ok(())
+    }
+
+    #[test]
+    fn parse_bond_standard() -> Result<(), ParseError> {
+        let line = "  2  5  2  0  0  0";
+        let bond = parse_bond_line(&line)?;
+
+        assert_eq!(bond.from_atom_id, 1);
+        assert_eq!(bond.to_atom_id, 4);
+        assert_eq!(bond.bond_type, BondType::double());
+        assert_eq!(bond.properties.len(), 0);
+
+        Ok(())
+    }
+
+    #[test]
+    fn parse_bond_type_simple() -> Result<(), ParseError> {
+        let line_single = "  2  5  1  0  0  0";
+        let line_double = "  2  5  2  0  0  0";
+        let line_triple = "  2  5  3  0  0  0";
+        let line_aromatic = "  2  5  4  0  0  0";
+
+        let bond_single = parse_bond_line(&line_single)?;
+        let bond_double = parse_bond_line(&line_double)?;
+        let bond_triple = parse_bond_line(&line_triple)?;
+        let bond_aromatic = parse_bond_line(&line_aromatic)?;
+
+        assert_eq!(bond_single.bond_type, BondType::single());
+        assert_eq!(bond_double.bond_type, BondType::double());
+        assert_eq!(bond_triple.bond_type, BondType::triple());
+        assert_eq!(bond_aromatic.bond_type, BondType::Aromatic);
+
+        Ok(())
+    }
+
+    #[test]
+    fn parse_bond_type_query() -> Result<(), ParseError> {
+        let line_singleordouble = "  2  5  5  0  0  0";
+        let line_singleoraromatic = "  2  5  6  0  0  0";
+        let line_doubleoraromatic = "  2  5  7  0  0  0";
+        let line_any = "  2  5  8  0  0  0";
+
+        let bond_singleordouble = parse_bond_line(&line_singleordouble)?;
+        let bond_singleoraromatic = parse_bond_line(&line_singleoraromatic)?;
+        let bond_doubleoraromatic = parse_bond_line(&line_doubleoraromatic)?;
+        let bond_any = parse_bond_line(&line_any)?;
+
+        assert_eq!(bond_singleordouble.bond_type, BondType::single_or_double());
+        assert_eq!(
+            bond_singleoraromatic.bond_type,
+            BondType::single_or_aromatic()
+        );
+        assert_eq!(
+            bond_doubleoraromatic.bond_type,
+            BondType::double_or_aromatic()
+        );
+        assert_eq!(bond_any.bond_type, BondType::Any);
+
+        Ok(())
+    }
+
+    #[test]
+    fn parse_bond_type_error_invalid() -> Result<(), ParseError> {
+        let line_bond_zero = "  2  5  0  0  0  0";
+        let line_bond_nine = "  2  5  9  0  0  0";
+
+        match parse_bond_line(&line_bond_zero) {
+            Err(ParseError::InvalidValue { name, value }) => {
+                assert_eq!(name, "bond type");
+                assert_eq!(value, "  0");
+            }
+            _ => panic!("Expected ParseError::Parse"),
+        }
+
+        match parse_bond_line(&line_bond_nine) {
+            Err(ParseError::InvalidValue { name, value }) => {
+                assert_eq!(name, "bond type");
+                assert_eq!(value, "  9");
+            }
+            _ => panic!("Expected ParseError::Parse"),
+        }
 
         Ok(())
     }

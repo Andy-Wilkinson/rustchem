@@ -7,7 +7,7 @@ mod point3d;
 mod property_map;
 
 pub use atom::{Atom, AtomIndex};
-pub use bond::Bond;
+pub use bond::{Bond, BondType};
 pub use element::Element;
 pub use errors::MoleculeError;
 pub use molecule::Molecule;
