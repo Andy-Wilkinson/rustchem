@@ -9,7 +9,7 @@ mod property_map;
 pub use atom::{Atom, AtomIndex};
 pub use bond::{Bond, BondType};
 pub use element::Element;
-pub use errors::MoleculeError;
+pub use errors::{MoleculeError, PropertyError};
 pub use molecule::Molecule;
 pub use point3d::Point3d;
 pub use property_map::{Property, PropertyMap};
