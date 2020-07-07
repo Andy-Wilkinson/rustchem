@@ -6,8 +6,6 @@ use crate::mol::{Atom, Bond, BondType, Molecule, Point3d};
 
 pub fn read_mol(reader: impl std::io::Read) -> Result<Molecule, FileReadError> {
     let mut line_reader = LineReader::new(reader);
-    let mut atoms: Vec<Atom> = Vec::new();
-    let mut bonds: Vec<Bond> = Vec::new();
 
     // TODO: Ignoring header
     line_reader.read_line()?;
@@ -17,21 +15,27 @@ pub fn read_mol(reader: impl std::io::Read) -> Result<Molecule, FileReadError> {
     let counts_line = parse_counts(&line_reader.read_line()?)
         .map_err(|source| FileReadError::LineParse { source, line: 3 })?;
 
-    for (line_number, atom_line) in line_reader.read_lines(counts_line.num_atoms).enumerate() {
-        let atom = parse_atom_line(&atom_line?).map_err(|source| FileReadError::LineParse {
-            source,
-            line: line_number + 3,
-        })?;
-        atoms.push(atom);
-    }
+    let mut atoms = line_reader
+        .read_lines(counts_line.num_atoms)
+        .enumerate()
+        .map(|(line_number, atom_line)| {
+            parse_atom_line(&atom_line?).map_err(|source| FileReadError::LineParse {
+                source,
+                line: line_number + 3,
+            })
+        })
+        .collect::<Result<Vec<Atom>, FileReadError>>()?;
 
-    for (line_number, bond_line) in line_reader.read_lines(counts_line.num_bonds).enumerate() {
-        let bond = parse_bond_line(&bond_line?).map_err(|source| FileReadError::LineParse {
-            source,
-            line: counts_line.num_atoms as usize + line_number + 3,
-        })?;
-        bonds.push(bond);
-    }
+    let bonds = line_reader
+        .read_lines(counts_line.num_bonds)
+        .enumerate()
+        .map(|(line_number, bond_line)| {
+            parse_bond_line(&bond_line?).map_err(|source| FileReadError::LineParse {
+                source,
+                line: counts_line.num_atoms as usize + line_number + 3,
+            })
+        })
+        .collect::<Result<Vec<Bond>, FileReadError>>()?;
 
     for _ in line_reader.read_lines(counts_line.num_atom_lists) {}
     for _ in line_reader.read_lines(counts_line.num_stext * 2) {}
@@ -219,7 +223,7 @@ pub fn parse_bond_line(line: &str) -> Result<Bond, ParseError> {
     let to_atom_id = parse_usize_default(&line[3..6], "atom 2")?;
     let bond_type = parse_u32_default(&line[6..9], "bond type")?;
     let _bond_stereo = parse_u32_default(&line[9..12], "bond stereochemistry")?;
-    let _bond_stereo = parse_u32_default(&line[15..18], "bond topology")?;
+    let _bond_topology = parse_u32_default(&line[15..18], "bond topology")?;
     let _reacting_center = parse_u32_default(&line[18..21], "reacting center status")?;
 
     let bond_type = match bond_type {
