@@ -10,6 +10,6 @@ pub use atom::{Atom, AtomIndex};
 pub use bond::{Bond, BondType};
 pub use element::Element;
 pub use errors::{MoleculeError, PropertyError};
-pub use molecule::Molecule;
+pub use molecule::{Molecule, MoleculeProperty};
 pub use point3d::Point3d;
-pub use property_map::{Property, PropertyMap};
+pub use property_map::{HasProperties, Property, PropertyMap};

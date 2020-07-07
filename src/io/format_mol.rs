@@ -1,6 +1,6 @@
 use super::utils::{parse_f64, parse_i32, parse_u32, parse_usize};
 use super::{FileReadError, LineReader, ParseError};
-use crate::mol::{Atom, Bond, BondType, Molecule, Point3d};
+use crate::mol::{Atom, Bond, BondType, HasProperties, Molecule, MoleculeProperty, Point3d};
 
 // Reference: https://web.archive.org/web/20070630061308/http:/www.mdl.com/downloads/public/ctfile/ctfile.pdf
 
@@ -8,7 +8,7 @@ pub fn read_mol(reader: impl std::io::Read) -> Result<Molecule, FileReadError> {
     let mut line_reader = LineReader::new(reader);
 
     // TODO: Ignoring header
-    line_reader.read_line()?;
+    let molecule_name = line_reader.read_line()?;
     line_reader.read_line()?;
     line_reader.read_line()?;
 
@@ -62,7 +62,10 @@ pub fn read_mol(reader: impl std::io::Read) -> Result<Molecule, FileReadError> {
         }
     }
 
-    let molecule = Molecule::from_graph(atoms, bonds);
+    let mut molecule = Molecule::from_graph(atoms, bonds);
+    molecule
+        .properties
+        .set_string(MoleculeProperty::Name, molecule_name);
     Ok(molecule)
 }
 
@@ -256,6 +259,7 @@ pub fn reset_atom_charges(atoms: &mut Vec<Atom>) {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::fs::File;
 
     #[test]
     fn parse_counts_okay() -> Result<(), ParseError> {
@@ -429,6 +433,18 @@ mod tests {
             _ => panic!("Expected ParseError::Parse"),
         }
 
+        Ok(())
+    }
+
+    #[test]
+    fn read_mol_alanine_header() -> Result<(), Box<dyn std::error::Error>> {
+        let file = File::open("./test_files/alanine.mol")?;
+        let mol = read_mol(file)?;
+
+        assert_eq!(
+            mol.properties.get_string(&MoleculeProperty::Name)?,
+            Some("L-Alanine (13C)")
+        );
         Ok(())
     }
 }

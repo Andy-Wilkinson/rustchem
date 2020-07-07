@@ -12,7 +12,7 @@ pub enum Property {
     Float(f64),
 }
 
-trait HasProperties<T> {
+pub trait HasProperties<T> {
     fn get_string(&self, property: &T) -> Result<Option<&str>, PropertyError>;
     fn get_u32(&self, property: &T) -> Result<Option<u32>, PropertyError>;
     fn get_i32(&self, property: &T) -> Result<Option<i32>, PropertyError>;
