@@ -9,6 +9,10 @@ pub struct Molecule {
 
 #[derive(PartialEq, Eq, Hash, Debug)]
 pub enum MoleculeProperty {
+    Comment,
+    CreationUser,
+    CreationProgram,
+    CreationDate,
     Name,
 }
 
