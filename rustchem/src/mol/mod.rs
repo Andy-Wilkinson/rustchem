@@ -12,4 +12,4 @@ pub use element::Element;
 pub use errors::{MoleculeError, PropertyError};
 pub use molecule::{Molecule, MoleculeProperty};
 pub use point3d::Point3d;
-pub use property_map::{HasProperties, Property, PropertyMap};
+pub use property_map::{HasProperties, PropertyMap};

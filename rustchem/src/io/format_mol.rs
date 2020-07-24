@@ -66,19 +66,19 @@ pub fn read_mol(reader: impl std::io::Read) -> Result<Molecule, FileReadError> {
     let mut molecule = Molecule::from_graph(atoms, bonds);
     molecule
         .properties
-        .set_string(MoleculeProperty::Name, molecule_name);
+        .set_property(MoleculeProperty::Name, molecule_name);
     molecule
         .properties
-        .set_string(MoleculeProperty::Comment, molecule_comment);
+        .set_property(MoleculeProperty::Comment, molecule_comment);
     molecule
         .properties
-        .set_string(MoleculeProperty::CreationUser, header_line.user);
+        .set_property(MoleculeProperty::CreationUser, header_line.user);
     molecule
         .properties
-        .set_string(MoleculeProperty::CreationProgram, header_line.program);
+        .set_property(MoleculeProperty::CreationProgram, header_line.program);
     molecule
         .properties
-        .set_string(MoleculeProperty::CreationDate, header_line.datetime);
+        .set_property(MoleculeProperty::CreationDate, header_line.datetime);
     Ok(molecule)
 }
 

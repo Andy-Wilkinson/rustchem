@@ -10,9 +10,6 @@ pub enum MoleculeError {
 
 #[derive(Error, Debug)]
 pub enum PropertyError {
-    #[error("Expected property to be of type {expected_type}, but found {actual_type}")]
-    IncorrectType {
-        expected_type: String,
-        actual_type: String,
-    },
+    #[error("Expected property to be of type {expected_type}")]
+    IncorrectType { expected_type: String },
 }
