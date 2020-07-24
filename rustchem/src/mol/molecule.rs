@@ -1,4 +1,4 @@
-use super::{Atom, Bond, PropertyMap};
+use super::{Atom, Bond, HasProperties, PropertyMap};
 
 #[derive(Debug)]
 pub struct Molecule {
@@ -37,5 +37,15 @@ impl Molecule {
 impl Default for Molecule {
     fn default() -> Self {
         Molecule::new()
+    }
+}
+
+impl HasProperties<MoleculeProperty> for Molecule {
+    fn get_property_map(&self) -> &PropertyMap<MoleculeProperty> {
+        &self.properties
+    }
+
+    fn get_property_map_mut(&mut self) -> &mut PropertyMap<MoleculeProperty> {
+        &mut self.properties
     }
 }

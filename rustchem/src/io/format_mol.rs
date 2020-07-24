@@ -64,21 +64,11 @@ pub fn read_mol(reader: impl std::io::Read) -> Result<Molecule, FileReadError> {
     }
 
     let mut molecule = Molecule::from_graph(atoms, bonds);
-    molecule
-        .properties
-        .set_property(MoleculeProperty::Name, molecule_name);
-    molecule
-        .properties
-        .set_property(MoleculeProperty::Comment, molecule_comment);
-    molecule
-        .properties
-        .set_property(MoleculeProperty::CreationUser, header_line.user);
-    molecule
-        .properties
-        .set_property(MoleculeProperty::CreationProgram, header_line.program);
-    molecule
-        .properties
-        .set_property(MoleculeProperty::CreationDate, header_line.datetime);
+    molecule.set_property(MoleculeProperty::Name, molecule_name);
+    molecule.set_property(MoleculeProperty::Comment, molecule_comment);
+    molecule.set_property(MoleculeProperty::CreationUser, header_line.user);
+    molecule.set_property(MoleculeProperty::CreationProgram, header_line.program);
+    molecule.set_property(MoleculeProperty::CreationDate, header_line.datetime);
     Ok(molecule)
 }
 
@@ -518,24 +508,23 @@ mod tests {
         let mol = read_mol(file)?;
 
         assert_eq!(
-            mol.properties.get_string(&MoleculeProperty::Name)?,
+            mol.get_property_string(&MoleculeProperty::Name)?,
             Some("L-Alanine (13C)")
         );
         assert_eq!(
-            mol.properties.get_string(&MoleculeProperty::CreationUser)?,
+            mol.get_property_string(&MoleculeProperty::CreationUser)?,
             Some("GS")
         );
         assert_eq!(
-            mol.properties
-                .get_string(&MoleculeProperty::CreationProgram)?,
+            mol.get_property_string(&MoleculeProperty::CreationProgram)?,
             Some("MACCS-II")
         );
         assert_eq!(
-            mol.properties.get_string(&MoleculeProperty::CreationDate)?,
+            mol.get_property_string(&MoleculeProperty::CreationDate)?,
             Some("1016911536")
         );
         assert_eq!(
-            mol.properties.get_string(&MoleculeProperty::Comment)?,
+            mol.get_property_string(&MoleculeProperty::Comment)?,
             Some("Additional Comments")
         );
         Ok(())
