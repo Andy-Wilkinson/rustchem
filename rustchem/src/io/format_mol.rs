@@ -3,6 +3,7 @@ use super::{FileReadError, LineReader, ParseError};
 use crate::mol::{Atom, Bond, BondType, HasProperties, Molecule, MoleculeProperty, Point3d};
 
 // Reference: https://web.archive.org/web/20070630061308/http:/www.mdl.com/downloads/public/ctfile/ctfile.pdf
+// Reference: https://depth-first.com/articles/2020/07/13/the-sdfile-format/
 
 pub fn read_mol(reader: impl std::io::Read) -> Result<Molecule, FileReadError> {
     let mut line_reader = LineReader::new(reader);
@@ -504,7 +505,7 @@ mod tests {
 
     #[test]
     fn read_mol_alanine_header() -> Result<(), Box<dyn std::error::Error>> {
-        let file = File::open("./test_files/alanine.mol")?;
+        let file = File::open("./test_files/alanine_v2000.mol")?;
         let mol = read_mol(file)?;
 
         assert_eq!(

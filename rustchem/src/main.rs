@@ -2,7 +2,7 @@ use rustchem::io::read_mol;
 use std::fs::File;
 
 fn main() {
-    let file = File::open("./test_files/alanine.mol");
+    let file = File::open("./test_files/alanine_v3000.mol");
 
     match file {
         Ok(file) => match read_mol(file) {
