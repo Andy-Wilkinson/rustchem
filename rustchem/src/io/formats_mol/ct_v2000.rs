@@ -1,19 +1,13 @@
-use super::utils::{parse_f64, parse_i32, parse_u32, parse_usize};
-use super::{FileReadError, LineReader, ParseError};
-use crate::mol::{Atom, Bond, BondType, HasProperties, Molecule, MoleculeProperty, Point3d};
+use super::utils::{parse_f64_default, parse_i32_default, parse_u32_default, parse_usize_default};
+use crate::io::{FileReadError, LineReader, ParseError};
+use crate::mol::{Atom, Bond, BondType, Molecule, Point3d};
 
 // Reference: https://web.archive.org/web/20070630061308/http:/www.mdl.com/downloads/public/ctfile/ctfile.pdf
 // Reference: https://depth-first.com/articles/2020/07/13/the-sdfile-format/
 
-pub fn read_mol(reader: impl std::io::Read) -> Result<Molecule, FileReadError> {
-    let mut line_reader = LineReader::new(reader);
-
-    // TODO: Ignoring header
-    let molecule_name = line_reader.read_line()?;
-    let header_line = parse_header(&line_reader.read_line()?)
-        .map_err(|source| FileReadError::LineParse { source, line: 2 })?;
-    let molecule_comment = line_reader.read_line()?;
-
+pub fn read_ct(
+    line_reader: &mut LineReader<impl std::io::Read>,
+) -> Result<Molecule, FileReadError> {
     let counts_line = parse_counts(&line_reader.read_line()?)
         .map_err(|source| FileReadError::LineParse { source, line: 3 })?;
 
@@ -64,25 +58,7 @@ pub fn read_mol(reader: impl std::io::Read) -> Result<Molecule, FileReadError> {
         }
     }
 
-    let mut molecule = Molecule::from_graph(atoms, bonds);
-    molecule.set_property(MoleculeProperty::Name, molecule_name);
-    molecule.set_property(MoleculeProperty::Comment, molecule_comment);
-    molecule.set_property(MoleculeProperty::CreationUser, header_line.user);
-    molecule.set_property(MoleculeProperty::CreationProgram, header_line.program);
-    molecule.set_property(MoleculeProperty::CreationDate, header_line.datetime);
-    Ok(molecule)
-}
-
-#[derive(Debug)]
-struct HeaderLine {
-    pub user: String,
-    pub program: String,
-    pub datetime: String,
-    pub flag_3d: bool,
-    pub scaling_int: u32,
-    pub scaling_float: f64,
-    pub energy: f64,
-    pub reg_number: u32,
+    Ok(Molecule::from_graph(atoms, bonds))
 }
 
 #[derive(Debug)]
@@ -94,64 +70,6 @@ struct CountsLine {
     num_stext: u32,
     num_properties: u32,
     version: String,
-}
-
-fn parse_u32_default(val: &str, dest_nature: &str) -> Result<u32, ParseError> {
-    if val.trim().is_empty() {
-        Ok(0)
-    } else {
-        parse_u32(val, dest_nature)
-    }
-}
-
-fn parse_i32_default(val: &str, dest_nature: &str) -> Result<i32, ParseError> {
-    if val.trim().is_empty() {
-        Ok(0)
-    } else {
-        parse_i32(val, dest_nature)
-    }
-}
-
-fn parse_f64_default(val: &str, dest_nature: &str) -> Result<f64, ParseError> {
-    if val.trim().is_empty() {
-        Ok(0.0)
-    } else {
-        parse_f64(val, dest_nature)
-    }
-}
-
-fn parse_usize_default(val: &str, dest_nature: &str) -> Result<usize, ParseError> {
-    if val.trim().is_empty() {
-        Ok(0)
-    } else {
-        parse_usize(val, dest_nature)
-    }
-}
-
-fn parse_header(line: &str) -> Result<HeaderLine, ParseError> {
-    /*
-    Header Line: 'IIPPPPPPPPMMDDYYHHmmddSSssssssssssEEEEEEEEEEEERRRRRR'
-
-    II = creation user's initials
-    PPPPPPPP = creation program name
-    MMDDYYHHmm = date/time
-    dd = dimensional codes
-    SS = scaling factor (Integer)
-    ssssssssss = scaling factor (Float ####.#####)
-    EEEEEEEEEEEE = energy if from modelling program output (Float ######.#####)
-    RRRRRR = internal registry number from MDL form (Integer)
-    */
-
-    Ok(HeaderLine {
-        user: line[0..2].to_string(),
-        program: line[2..10].to_string(),
-        datetime: line[10..20].to_string(),
-        flag_3d: &line[20..22] == "3D",
-        scaling_int: parse_u32_default(&line[22..24], "scaling factor")?,
-        scaling_float: parse_f64_default(&line[24..34], "scaling factor")?,
-        energy: parse_f64_default(&line[34..46], "energy")?,
-        reg_number: parse_u32_default(&line[46..52], "registration number")?,
-    })
 }
 
 fn parse_counts(line: &str) -> Result<CountsLine, ParseError> {
@@ -185,7 +103,7 @@ fn parse_counts(line: &str) -> Result<CountsLine, ParseError> {
     Ok(counts_line)
 }
 
-pub fn parse_atom_line(line: &str) -> Result<Atom, ParseError> {
+fn parse_atom_line(line: &str) -> Result<Atom, ParseError> {
     /*
     Atom Block: 'xxxxx.xxxxyyyyy.yyyyzzzzz.zzzz aaaddcccssshhhbbbvvvHHHrrriiimmmnnneee'
 
@@ -214,9 +132,9 @@ pub fn parse_atom_line(line: &str) -> Result<Atom, ParseError> {
         format!("{:69}", line)
     };
 
-    let x = parse_f64(&line[0..10], "x-coordinate")?;
-    let y = parse_f64(&line[10..20], "y-coordinate")?;
-    let z = parse_f64(&line[20..30], "z-coordinate")?;
+    let x = parse_f64_default(&line[0..10], "x-coordinate")?;
+    let y = parse_f64_default(&line[10..20], "y-coordinate")?;
+    let z = parse_f64_default(&line[20..30], "z-coordinate")?;
     let symbol = &line[31..34].trim();
     let mass_difference = parse_i32_default(&line[34..36], "mass difference")?;
     let charge_id = parse_u32_default(&line[36..39], "charge")?;
@@ -251,7 +169,7 @@ pub fn parse_atom_line(line: &str) -> Result<Atom, ParseError> {
     Ok(atom)
 }
 
-pub fn parse_bond_line(line: &str) -> Result<Bond, ParseError> {
+fn parse_bond_line(line: &str) -> Result<Bond, ParseError> {
     /*
     Bond Block: '111222tttsssxxxrrrccc'
 
@@ -299,7 +217,7 @@ pub fn parse_bond_line(line: &str) -> Result<Bond, ParseError> {
     Ok(Bond::new(from_atom_id - 1, to_atom_id - 1, bond_type))
 }
 
-pub fn reset_atom_charges(atoms: &mut Vec<Atom>) {
+fn reset_atom_charges(atoms: &mut Vec<Atom>) {
     for atom in atoms {
         atom.formal_charge = 0;
         // TODO: atom.radical = 0;
@@ -309,24 +227,6 @@ pub fn reset_atom_charges(atoms: &mut Vec<Atom>) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::test_utils::assert_f64_eq;
-    use std::fs::File;
-
-    #[test]
-    fn parse_header_line() -> Result<(), ParseError> {
-        let line = "GSMACCS-II10169115362D 1   0.00366     0.00123    42";
-        let header_line = parse_header(&line)?;
-
-        assert_eq!(header_line.user, "GS");
-        assert_eq!(header_line.program, "MACCS-II");
-        assert_eq!(header_line.datetime, "1016911536");
-        assert_eq!(header_line.flag_3d, false);
-        assert_eq!(header_line.scaling_int, 1);
-        assert_f64_eq(header_line.scaling_float, 0.00366);
-        assert_f64_eq(header_line.energy, 0.00123);
-        assert_eq!(header_line.reg_number, 42);
-        Ok(())
-    }
 
     #[test]
     fn parse_counts_line() -> Result<(), ParseError> {
@@ -500,34 +400,6 @@ mod tests {
             _ => panic!("Expected ParseError::Parse"),
         }
 
-        Ok(())
-    }
-
-    #[test]
-    fn read_mol_alanine_header() -> Result<(), Box<dyn std::error::Error>> {
-        let file = File::open("./test_files/alanine_v2000.mol")?;
-        let mol = read_mol(file)?;
-
-        assert_eq!(
-            mol.get_property_string(&MoleculeProperty::Name)?,
-            Some("L-Alanine (13C)")
-        );
-        assert_eq!(
-            mol.get_property_string(&MoleculeProperty::CreationUser)?,
-            Some("GS")
-        );
-        assert_eq!(
-            mol.get_property_string(&MoleculeProperty::CreationProgram)?,
-            Some("MACCS-II")
-        );
-        assert_eq!(
-            mol.get_property_string(&MoleculeProperty::CreationDate)?,
-            Some("1016911536")
-        );
-        assert_eq!(
-            mol.get_property_string(&MoleculeProperty::Comment)?,
-            Some("Additional Comments")
-        );
         Ok(())
     }
 }
